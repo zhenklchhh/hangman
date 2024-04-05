@@ -8,7 +8,7 @@ public class Hangman{
     public static Set<Character> usedLetters = new HashSet<>();
     public static void loadGallowStages(){
         gallowStages[0] = new String[]{
-                "  +---_+",
+                "  +----+",
                 "  |    |",
                 "       |",
                 "       |",
@@ -17,7 +17,7 @@ public class Hangman{
                 "========="
         };
         gallowStages[1] = new String[]{
-                "  +---_+",
+                "  +----+",
                 "  |    |",
                 "  O    |",
                 "       |",
@@ -35,7 +35,7 @@ public class Hangman{
                 "========="
         };
         gallowStages[3] = new String[]{
-                "  +---_+",
+                "  +----+",
                 "  |    |",
                 "  O    |",
                 "  |\\   |",
@@ -44,7 +44,7 @@ public class Hangman{
                 "========="
         };
         gallowStages[4] = new String[]{
-                "  +---_+",
+                "  +----+",
                 "  |    |",
                 "  O    |",
                 " /|\\   |",
@@ -53,10 +53,10 @@ public class Hangman{
                 "========="
         };
         gallowStages[5] = new String[]{
-                "  +---_+",
+                "  +----+",
                 "  |    |",
                 "  O    |",
-                " /|\\  |",
+                " /|\\   |",
                 "   \\   |",
                 "       |",
                 "========="
@@ -65,7 +65,7 @@ public class Hangman{
                 "  +---_+",
                 "  |    |",
                 "  O    |",
-                " /|\\  |",
+                " /|\\   |",
                 " / \\   |",
                 "       |",
                 "========="
@@ -89,19 +89,12 @@ public class Hangman{
         }
         System.out.println("Количество ошибок: " + mistakes);
     }
-    public static void startGame() {
-        // выбираем рандомно слово
-        Random rand = new Random();
+    public static void startGame(String word) {
         int countMistakes = 0;
-        String word = words.get(rand.nextInt(words.size()));
-        int wordSize = word.length();
-        int guessedLetters = 0;
-        StringBuilder hidenWord = new StringBuilder("-".repeat(wordSize));
-        System.out.println(word);
-
-        // начинаем игру
+        StringBuilder hidenWord = new StringBuilder("-".repeat(word.length()));
+        boolean gameFinished = false;
         char letter;
-        do{
+        while(!gameFinished){
             printStage(countMistakes);
             System.out.println(hidenWord);
             System.out.println("Введите букву: ");
@@ -120,37 +113,39 @@ public class Hangman{
                 index = word.indexOf(letter, index + 1);
                 if (index != -1) {
                     hasLetter = true;
-                    guessedLetters++;
                     hidenWord.deleteCharAt(index);
                     hidenWord.insert(index, letter);
                 }
             } while (index != -1);
 
             countMistakes += hasLetter ? 0 : 1;
-            if(guessedLetters == wordSize){
+            if(String.valueOf(hidenWord).equals(word)){
                 System.out.println("Ты выйграл! :)");
                 System.out.println("Загаданное слово: " + word);
-                break;
+                gameFinished = true;
             }
             else if (countMistakes == 6){
                 printStage(countMistakes);
                 System.out.println("Тебя повесили :(");
                 System.out.println("Загаданное слово: " + word);
-                break;
+                gameFinished = true;
             }
-        }while(true);
+        }
+        usedLetters.clear();
     }
     public static void main(String[] args) {
         System.out.println("Добро пожаловать в игру Виселица.");
         List<String> words = new ArrayList<>();
+        Random rand = new Random();
         loadGallowStages();
         loadWords(words);
         String command;
-        do{
+        while(true){
             System.out.println("Чтобы начать новую игру введи команду start, выход из приложения - exit");
             command = scanner.next();
             if(command.equals("start")){
-                startGame();
+                String word = words.get(rand.nextInt(words.size()));
+                startGame(word);
             }
             else if (command.equals("exit")){
                 System.exit(0);
@@ -159,6 +154,5 @@ public class Hangman{
                 System.out.println("Неправильная команда.");
             }
         }
-        while(true);
     }
 }
