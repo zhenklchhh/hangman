@@ -76,7 +76,7 @@ public class Hangman{
     }
     public static void loadWords(List<String> words){
         try {
-            File wordFile = new File("src/words.txt");
+            File wordFile = new File("resources/words.txt");
             Scanner scanWords = new Scanner(wordFile);
             while(scanWords.hasNextLine()){
                 words.add(scanWords.next());
