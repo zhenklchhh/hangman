@@ -3,77 +3,13 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 public class Hangman{
-    public static final Scanner scanner = new Scanner(System.in);
-    public static final String[][] gallowStages = new String[7][6];
+    public static Scanner scanner = new Scanner(System.in);
+    public static Scaffold scaffold = new Scaffold();
     public static Set<Character> usedLetters = new HashSet<>();
     public static String word;
     public static StringBuilder hidenWord;
+    public static int DEATH_STATE = 6;
     public static int countMistakes = 0;
-    public static void loadGallowStages(){
-        gallowStages[0] = new String[]{
-                "  +----+",
-                "  |    |",
-                "       |",
-                "       |",
-                "       |",
-                "       |",
-                "========="
-        };
-        gallowStages[1] = new String[]{
-                "  +----+",
-                "  |    |",
-                "  O    |",
-                "       |",
-                "       |",
-                "       |",
-                "========="
-        };
-        gallowStages[2] = new String[]{
-                "  +----+",
-                "  |    |",
-                "  O    |",
-                "  |    |",
-                "       |",
-                "       |",
-                "========="
-        };
-        gallowStages[3] = new String[]{
-                "  +----+",
-                "  |    |",
-                "  O    |",
-                "  |\\   |",
-                "       |",
-                "       |",
-                "========="
-        };
-        gallowStages[4] = new String[]{
-                "  +----+",
-                "  |    |",
-                "  O    |",
-                " /|\\   |",
-                "       |",
-                "       |",
-                "========="
-        };
-        gallowStages[5] = new String[]{
-                "  +----+",
-                "  |    |",
-                "  O    |",
-                " /|\\   |",
-                "   \\   |",
-                "       |",
-                "========="
-        };
-        gallowStages[6] = new String[]{
-                "  +----+",
-                "  |    |",
-                "  O    |",
-                " /|\\   |",
-                " / \\   |",
-                "       |",
-                "========="
-        };
-    }
     public static void loadWords(List<String> words){
         try {
             File wordFile = new File("resources/words.txt");
@@ -87,64 +23,71 @@ public class Hangman{
         }
     }
     public static void printStage(){
-        for(int i = 0; i < 6; i++){
-            System.out.println(gallowStages[countMistakes][i]);
-        }
+        scaffold.drawHangman(countMistakes);
         System.out.println("Количество ошибок: " + countMistakes);
     }
-    public static boolean checkWinLossConditions(){
-        if(String.valueOf(hidenWord).equals(word)){
-            System.out.println("Ты выйграл! :)");
-            System.out.println("Загаданное слово: " + word);
-            return true;
-        }
-        else if (countMistakes == 6){
-            printStage();
-            System.out.println("Тебя повесили :(");
-            System.out.println("Загаданное слово: " + word);
-            return true;
-        }
-        return false;
+    public static boolean checkWin(){
+        return String.valueOf(hidenWord).equals(word);
+    }
+    public static void printWinMessage(){
+        System.out.println("Ты выйграл! :)");
+        System.out.println("Загаданное слово: " + word);
+    }
+    public static boolean checkLose(){
+        return countMistakes == DEATH_STATE;
+    }
+    public static void printLoseMessage(){
+        System.out.println("Тебя повесили :(");
+        System.out.println("Загаданное слово: " + word);
     }
     public static boolean isValidLetter(char letter){
         if(!(Character.isLetter(letter) && Character.UnicodeBlock.of(letter) == Character.UnicodeBlock.CYRILLIC)){
             System.out.println("Неправильный ввод. Вводите только маленькие буквы русского алфавита");
             return false;
-        }else if (usedLetters.contains(letter)){
+        }
+        return true;
+    }
+    public static boolean isGuessedLetter(char letter){
+        if (usedLetters.contains(letter)){
             System.out.println("Эта буква уже была использована");
             return false;
         }
         return true;
     }
-    public static boolean checkLetter(char letter){
+    public static boolean isLetterInWord(char letter){
         boolean hasLetter = false;
-        int index = -1;
-        do {
-            index = word.indexOf(letter, index + 1);
-            if (index != -1) {
+        for(int i = 0; i < word.length(); i++){
+            if (word.charAt(i) == letter){
                 hasLetter = true;
-                hidenWord.deleteCharAt(index);
-                hidenWord.insert(index, letter);
+                hidenWord.replace(i, i + 1, String.valueOf(letter));
             }
-        } while (index != -1);
+        }
         return hasLetter;
     }
     public static void gameRound(){
         printStage();
         System.out.println(hidenWord);
         System.out.println("Введите букву: ");
-        char letter = scanner.next().charAt(0);
-        if(!isValidLetter(letter))
+        char letter = Character.toLowerCase(scanner.next().charAt(0));
+        if(!isValidLetter(letter) || !isGuessedLetter(letter))
             return;
         usedLetters.add(letter);
-        countMistakes += checkLetter(letter) ? 0 : 1;
+        countMistakes += isLetterInWord(letter) ? 0 : 1;
     }
     public static void startGame() {
         hidenWord = new StringBuilder("-".repeat(word.length()));
         boolean gameFinished = false;
         while(!gameFinished){
             gameRound();
-            gameFinished = checkWinLossConditions();
+            if(checkWin()){
+                printWinMessage();
+                gameFinished = true;
+            }
+            if(checkLose()){
+                printStage();
+                printLoseMessage();
+                gameFinished = true;
+            }
         }
         usedLetters.clear();
         countMistakes = 0;
@@ -153,7 +96,6 @@ public class Hangman{
         System.out.println("Добро пожаловать в игру Виселица.");
         List<String> words = new ArrayList<>();
         Random rand = new Random();
-        loadGallowStages();
         loadWords(words);
         String command;
         while(true){
